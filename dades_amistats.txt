@@ -1,11 +1,2 @@
 marta@gmail.com joan@gmail.com Aprovada
-carles@gmail.com marta@gmail.com Aprovada
-marta@gmail.com duni@gmail.com Aprovada
-marta@gmail.com sj@gmail.com Rebutjada
-agatha@gmail.com joan@gmail.com Aprovada
-marta@gmail.com 2c@gmail.com Aprovada
-rudolph@gmail.com joan@gmail.com Pendent
-rudolph@gmail.com agatha@gmail.com Aprovada
-marta@gmail.com steiner@gmail.com Pendent
-sj@gmail.com joan@gmail.com Aprovada
-steiner@gmail.com rudolph@gmail.com Rebutjada
+marta@gmail.com hafid@hafid.com Aprovada

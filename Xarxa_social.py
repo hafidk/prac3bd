@@ -1,6 +1,9 @@
 import sqlite3 as lite
 import sys
 
+import time
+from datetime import date
+
 
 def llegueix_usuaris():
     """
@@ -21,7 +24,7 @@ def llegueix_usuaris():
 
 def guarda_usuaris():
     """
-    agafa tots els usuaris que tenim a la bd i els guarda al txt
+    agafa tots els usuaris que tenim a la bd i els guarda al txt AL ACABAR TOT
     """
     
     cur.execute("SELECT * FROM usuaris")
@@ -35,7 +38,7 @@ def llegueix_amistats():
     """
     agafa el document dades_amistats.txt i els volca a la bd
     """
-    
+    #OJU AMB ELS PUTUS SALTS DE LINEA AL FINAL DEL FITXER TXT, EL QUART D'HORA MES EMOCIONANT DE ME VIDA
     f=open("dades_amistats.txt","r");
     c=f.readlines()
     c2=[x.strip() for x in c]
@@ -43,8 +46,10 @@ def llegueix_amistats():
     for element in c2:
         t.append(tuple(element.split(" ")))
     t2=tuple(t)
+    print t2
     #compte amb el salt de linea al final de usuaris.txt    
     cur.executemany("INSERT INTO amistats VALUES(?,?,?)", t2)
+    #fixed... de momento
     con.commit()
     f.close()
 
@@ -87,14 +92,19 @@ def afegeix_usuari():
     cognom=raw_input("Cognom: ")
     email=raw_input("Email: ")
     ciutat=raw_input("ciutat: ")
-    naixement=raw_input("Data: ")#format dd-mm-aaaa
+    naixement=raw_input("Data: ")#format AAAA/MM/DD. m'esta donant pel cul que dona gust
+    
+    #anys=input("any naixement: ")
+    #mes=input("mes naixement: ")
+    #dia=input("dia naixement: ")
+    #magia:
+    #data=date(anys,mes,dia)
+    #m'esta ficant nervios, no funciona
     pwd=raw_input("Pwd: ")
-    print naixement
-    packet=(email,nom,cognom,ciutat,(naixement),pwd)
-    print packet
-    comanda="INSERT INTO usuaris VALUES('%s','%s','%s','%s',%s,'%s')" % packet
-    cur.execute(comanda)
-    guarda_usuaris()    
+    packet=(email,nom,cognom,ciutat,naixement,pwd)
+    print packet #el packet esta be a nivell de data
+    #comanda="INSERT INTO usuaris VALUES('%s','%s','%s','%s',%s,'%s')" % packet
+    cur.execute("INSERT INTO usuaris VALUES (?,?,?,?,?,?)",(email,nom,cognom,ciutat,naixement,pwd))
     return
 
 def mostra_ciutat(city):
@@ -121,10 +131,12 @@ def elimina_usuari(mail):
     #Parxe dolent, el execute no es menja res que no siguin tuples
     cur.execute("DELETE FROM usuaris WHERE email = ?",(mail,))
     con.commit()
-    guarda_usuaris()
+    #guarda_usuaris()#perhaps fer aixo es massa d'hora
     #s'ha de afegir que si s'elimina el usuari l'amistat tambe despareix
+    #vale ja se quin es el problema, a la que es carrega un usuari fa un delete d'aquella linea i tots els que estan a sota queden olvidats, depppp
     cur.execute("DELETE FROM amistats WHERE email1 = ? OR email2= ?",(mail,mail))
     #done, que bona haf, que bonnna
+    #ni bona ni merdes, ara es carrega a tot sant, veamos
     return
 
 def chng_pwd(mail,old_pwd,nw_pwd):
@@ -134,14 +146,12 @@ def chng_pwd(mail,old_pwd,nw_pwd):
     if contrasenya==old_pwd:
         cur.execute("UPDATE usuaris SET pwd = ? WHERE email = ?",(nw_pwd,mail))
         con.commit()
-        guarda_usuaris()
     else:
         print "Antic pwd incorrecte"
 
 def chng_poblacio(mail,nw_pb):
     cur.execute("UPDATE usuaris SET poblacio = ? WHERE email = ?",(nw_pb,mail))
     con.commit()
-    guarda_usuaris()
 
 def envia_solicitud(mail1,mail2):
     """
@@ -150,7 +160,6 @@ def envia_solicitud(mail1,mail2):
     packet=(mail1,mail2,"Pendent")
     comanda="INSERT INTO amistats VALUES('%s','%s','%s')" % packet
     cur.execute(comanda)
-    guarda_amistats()
 
 def acepta_solicitud(mail1,mail2):
     """
@@ -164,7 +173,6 @@ def acepta_solicitud(mail1,mail2):
     if estat=="Pendent":
         cur.execute("UPDATE amistats SET estat='Aprovada' WHERE email1 = ? AND email2 = ?",(mail1,mail2))
         con.commit()
-        guarda_amistats()
 
 def rebutja_solicitud(mail1,mail2):
     """
@@ -179,7 +187,6 @@ def rebutja_solicitud(mail1,mail2):
     if estat=="Pendent":
         cur.execute("UPDATE amistats SET estat='Rebutjada' WHERE email1 = ? AND email2 = ?",(mail1,mail2))
         con.commit()
-        guarda_amistats()
 
 
 def amics(nom,cognom):
@@ -241,16 +248,18 @@ def how_to():
 
 con=lite.connect("prova.db")
 cur=con.cursor()
+cur.execute('pragma foreign_keys=ON')
 cur.executescript("""
     DROP TABLE IF EXISTS usuaris;
-CREATE TABLE usuaris(email varchar(20),nom varchar(20),cognom varchar(20),poblacio varchar(20),dataNaixament date, pwd varchar(20));
-""")
+CREATE TABLE usuaris(email varchar(20) PRIMARY KEY, nom varchar(20) NOT NULL ,cognom varchar(20),poblacio varchar(20), dataNaixament DATE, pwd varchar(20) NOT NULL); """)
 #em peta al crear dominis
+#on the other hand, aixo es deep shit
 cur.executescript("""
    DROP TABLE IF EXISTS amistats;
-   CREATE TABLE amistats(email1 varchar(20), email2 varchar(20), estat estatsAmistats);
 
-""")
+   CREATE TABLE amistats(
+
+email1 varchar(20) NOT NULL, email2 varchar(20) NOT NULL, estat varchar(10) NOT NULL, PRIMARY KEY (email1,email2), FOREIGN KEY (email1) REFERENCES usuaris(email) ON UPDATE CASCADE ON DELETE CASCADE, FOREIGN KEY (email2) REFERENCES usuaris(email) ON UPDATE CASCADE ON DELETE CASCADE); """)
 
 con.commit()
 
@@ -324,49 +333,53 @@ while True:
         5-Veure total peticions (Aceptades/Rebutjades/Pendents)
         6-Veure relacio usuari/peticions rebutjades
         """
-        oper=input("que vols fer: ")
-
-        if oper==1:
-            nom=raw_input("nom usuari: ")
-            cognom=raw_input("cognom usuari: ")
-            amics(nom,cognom)
-    
-        elif oper==2:
-            mail=raw_input("mail usuari: ")
-            old_pwd=raw_input("contrasenya antiga")
-            nw_pwd=raw_input("contrasenya nova")
-            chng_pwd(mail,old_pwd,nw_pwd)
-            print "contrasenya canviada"
-            print
-
+        while True:
+            oper=input("que vols fer: ")
             
-        elif oper==3:
-            mail=raw_input("mail usuari: ")
-            nw_pb=raw_input("nova poblacio")
-            chng_poblacio(mail,nw_pb)
-            print "poblacio canviada"
-            print 
-
-        elif oper==4:
-            mail=raw_input("mail del usuari a eliminar: ")
-            elimina_usuari(mail)
-            print "usuari eliminat"
-            print
-
-        elif oper==5:
-            mode=raw_input("Quines vols, Aprovada/Rebutjada/Pendent: ")
-            print
-            print "peticions en estat %s" % mode
-            print calcul_peticions(mode)
-
-        elif oper==6:
-            totes_rebutjades()
+            if oper==1:
+                nom=raw_input("nom usuari: ")
+                cognom=raw_input("cognom usuari: ")
+                amics(nom,cognom)
+                
+            elif oper==2:
+                mail=raw_input("mail usuari: ")
+                old_pwd=raw_input("contrasenya antiga")
+                nw_pwd=raw_input("contrasenya nova")
+                chng_pwd(mail,old_pwd,nw_pwd)
+                print "contrasenya canviada"
+                print
+                
+                #PORTO COM MITJA HORA SOLUCIONANT BUGS QUE APAREIXEN SOLS :)
+            elif oper==3:
+                mail=raw_input("mail usuari: ")
+                nw_pb=raw_input("nova poblacio")
+                chng_poblacio(mail,nw_pb)
+                print "poblacio canviada"
+                print 
+                
+            elif oper==4:
+                mail=raw_input("mail del usuari a eliminar: ")
+                elimina_usuari(mail)
+                print "usuari eliminat"
+                print
+                
+            elif oper==5:
+                mode=raw_input("Quines vols, Aprovada/Rebutjada/Pendent: ")
+                print
+                print "peticions en estat %s" % mode
+                print calcul_peticions(mode)
+                
+            elif oper==6:
+                totes_rebutjades()
             
-
-        else:
-            break
+                
+            else:
+                break
 
             
     elif op==8:
         print "thats all folks!"
+        guarda_usuaris()
+        guarda_amistats()
+        #salvados por la campana, aixo soluciona bastants problemes de concepte
         break
