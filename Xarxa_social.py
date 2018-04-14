@@ -134,6 +134,7 @@ def elimina_usuari(mail):
     #guarda_usuaris()#perhaps fer aixo es massa d'hora
     #s'ha de afegir que si s'elimina el usuari l'amistat tambe despareix
     #vale ja se quin es el problema, a la que es carrega un usuari fa un delete d'aquella linea i tots els que estan a sota queden olvidats, depppp
+    #solucionat, mirar les ultimes 10 lines del programa
     cur.execute("DELETE FROM amistats WHERE email1 = ? OR email2= ?",(mail,mail))
     #done, que bona haf, que bonnna
     #ni bona ni merdes, ara es carrega a tot sant, veamos
@@ -332,6 +333,7 @@ while True:
         4-elimina l'usuari
         5-Veure total peticions (Aceptades/Rebutjades/Pendents)
         6-Veure relacio usuari/peticions rebutjades
+        7-torna al menu anterior
         """
         while True:
             oper=input("que vols fer: ")
