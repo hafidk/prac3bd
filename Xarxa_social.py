@@ -17,14 +17,13 @@ def llegueix_usuaris():
     for element in c2:
         t.append(tuple(element.split(" ")))
     t2=tuple(t)
-    #compte amb el salt de linea al final de usuaris.txt    
     cur.executemany("INSERT INTO usuaris VALUES(?,?,?,?,?,?)", t2)
     con.commit()
     f.close()
 
 def guarda_usuaris():
     """
-    agafa tots els usuaris que tenim a la bd i els guarda al txt AL ACABAR TOT
+    agafa tots els usuaris que tenim a la bd i els guarda al txt
     """
     
     cur.execute("SELECT * FROM usuaris")
@@ -34,11 +33,10 @@ def guarda_usuaris():
         f.write("%s %s %s %s %s %s" % fila +"\n")
     f.close()
 
-def llegueix_amistats():
+def llegeix_amistats():
     """
     agafa el document dades_amistats.txt i els volca a la bd
     """
-    #OJU AMB ELS PUTUS SALTS DE LINEA AL FINAL DEL FITXER TXT, EL QUART D'HORA MES EMOCIONANT DE ME VIDA
     f=open("dades_amistats.txt","r");
     c=f.readlines()
     c2=[x.strip() for x in c]
@@ -46,16 +44,13 @@ def llegueix_amistats():
     for element in c2:
         t.append(tuple(element.split(" ")))
     t2=tuple(t)
-    print t2
-    #compte amb el salt de linea al final de usuaris.txt    
     cur.executemany("INSERT INTO amistats VALUES(?,?,?)", t2)
-    #fixed... de momento
     con.commit()
     f.close()
 
 def guarda_amistats():
     """
-    agafa totes les amistats que tenim a la bd i els guarda al txt
+    agafa totes les amistats que tenim a la bd i les guarda al txt
     """
     
     cur.execute("SELECT * FROM amistats")
@@ -92,24 +87,16 @@ def afegeix_usuari():
     cognom=raw_input("Cognom: ")
     email=raw_input("Email: ")
     ciutat=raw_input("ciutat: ")
-    naixement=raw_input("Data: ")#format AAAA/MM/DD. m'esta donant pel cul que dona gust
-    
-    #anys=input("any naixement: ")
-    #mes=input("mes naixement: ")
-    #dia=input("dia naixement: ")
-    #magia:
-    #data=date(anys,mes,dia)
-    #m'esta ficant nervios, no funciona
+    naixement=raw_input("Data: ")#format AAAA/MM/DD
     pwd=raw_input("Pwd: ")
     packet=(email,nom,cognom,ciutat,naixement,pwd)
-    print packet #el packet esta be a nivell de data
-    #comanda="INSERT INTO usuaris VALUES('%s','%s','%s','%s',%s,'%s')" % packet
+    print packet
     cur.execute("INSERT INTO usuaris VALUES (?,?,?,?,?,?)",(email,nom,cognom,ciutat,naixement,pwd))
     return
 
 def mostra_ciutat(city):
     """
-    Mostra tots els usuaris que viuen a la ciutat tal
+    Mostra tots els usuaris que viuen a la ciutat "city"
     """
     cur.execute("SELECT nom,cognom from usuaris WHERE poblacio = ?",(city,))
     resultat=cur.fetchall()
@@ -121,6 +108,7 @@ def mostra_edat(year):
     """
     Mostra tots els usuaris que tenen mes de x anys.
     PER FER
+    cur.execute("SELECT nom,cognom FROM usuaris WHERE DataNaixement < 31.12.?", (year,))
     """
     comanda="SELECT DataNaixament from usuaris"
     cur.execute(comanda)
@@ -128,16 +116,9 @@ def mostra_edat(year):
     print resultat
 
 def elimina_usuari(mail):
-    #Parxe dolent, el execute no es menja res que no siguin tuples
     cur.execute("DELETE FROM usuaris WHERE email = ?",(mail,))
     con.commit()
-    #guarda_usuaris()#perhaps fer aixo es massa d'hora
-    #s'ha de afegir que si s'elimina el usuari l'amistat tambe despareix
-    #vale ja se quin es el problema, a la que es carrega un usuari fa un delete d'aquella linea i tots els que estan a sota queden olvidats, depppp
-    #solucionat, mirar les ultimes 10 lines del programa
     cur.execute("DELETE FROM amistats WHERE email1 = ? OR email2= ?",(mail,mail))
-    #done, que bona haf, que bonnna
-    #ni bona ni merdes, ara es carrega a tot sant, veamos
     return
 
 def chng_pwd(mail,old_pwd,nw_pwd):
@@ -156,7 +137,7 @@ def chng_poblacio(mail,nw_pb):
 
 def envia_solicitud(mail1,mail2):
     """
-    mail1 vol ser amic de mail2 (anira a pendent)
+    mail1 envia solicitud a mail2 (anira a pendent)
     """
     packet=(mail1,mail2,"Pendent")
     comanda="INSERT INTO amistats VALUES('%s','%s','%s')" % packet
@@ -164,7 +145,7 @@ def envia_solicitud(mail1,mail2):
 
 def acepta_solicitud(mail1,mail2):
     """
-    mail1 ESTEM CAIENT EN EL JOC DE QUI ACEPTA A QUI MAYDAY" acepta a mail2
+    mail1 acepta a mail2
     """
     #primer mirem que estigui pendent
     cur.execute("SELECT estat FROM amistats WHERE email1 = ? AND email2= ? ",(mail1,mail2))
@@ -177,7 +158,7 @@ def acepta_solicitud(mail1,mail2):
 
 def rebutja_solicitud(mail1,mail2):
     """
-    mail1 ESTEM CAIENT EN EL JOC DE QUI REBUTJA A QUI MAYDAY" rebutja a mail2
+    mail1 rebutja a mail2
     """
     #primer mirem que estigui pendent
 
@@ -192,7 +173,7 @@ def rebutja_solicitud(mail1,mail2):
 
 def amics(nom,cognom):
     """
-    mostra els amics de la persona amb tal nom i cognom
+    mostra els amics de la persona que es demana
     """
     cur.execute("SELECT nom,cognom FROM usuaris WHERE email in (SELECT (amistats.email2) FROM amistats, usuaris WHERE (usuaris.email=amistats.email1 AND  usuaris.nom=? and  usuaris.cognom=? and amistats.estat='Aprovada'))",(nom,cognom))
     resultat=cur.fetchall()
@@ -253,8 +234,7 @@ cur.execute('pragma foreign_keys=ON')
 cur.executescript("""
     DROP TABLE IF EXISTS usuaris;
 CREATE TABLE usuaris(email varchar(20) PRIMARY KEY, nom varchar(20) NOT NULL ,cognom varchar(20),poblacio varchar(20), dataNaixament DATE, pwd varchar(20) NOT NULL); """)
-#em peta al crear dominis
-#on the other hand, aixo es deep shit
+#problema al crear dominis
 cur.executescript("""
    DROP TABLE IF EXISTS amistats;
 
@@ -264,7 +244,7 @@ email1 varchar(20) NOT NULL, email2 varchar(20) NOT NULL, estat varchar(10) NOT 
 
 con.commit()
 
-#al inici sempre lleguirem els .txt
+#al inici sempre llegirem els .txt
 llegueix_usuaris()
 llegueix_amistats()
 
@@ -351,7 +331,6 @@ while True:
                 print "contrasenya canviada"
                 print
                 
-                #PORTO COM MITJA HORA SOLUCIONANT BUGS QUE APAREIXEN SOLS :)
             elif oper==3:
                 mail=raw_input("mail usuari: ")
                 nw_pb=raw_input("nova poblacio")
@@ -383,5 +362,4 @@ while True:
         print "thats all folks!"
         guarda_usuaris()
         guarda_amistats()
-        #salvados por la campana, aixo soluciona bastants problemes de concepte
         break
