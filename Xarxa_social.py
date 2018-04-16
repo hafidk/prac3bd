@@ -72,8 +72,6 @@ def mostra_usuaris():
         print "%s %s" % element+"\n"
     return
 
-def mostra_usuaris_personalitzat(l):
-    pass
 
 def mostra_amistats():
 
@@ -107,7 +105,7 @@ def mostra_ciutat(city):
 def mostra_edat(year):
     """
     Mostra tots els usuaris que tenen mes de x anys.
-    PER FER
+    Potser seria:
     cur.execute("SELECT nom,cognom FROM usuaris WHERE DataNaixement < 31.12.?", (year,))
     """
     comanda="SELECT DataNaixament from usuaris"
@@ -234,7 +232,7 @@ cur.execute('pragma foreign_keys=ON')
 cur.executescript("""
     DROP TABLE IF EXISTS usuaris;
 CREATE TABLE usuaris(email varchar(20) PRIMARY KEY, nom varchar(20) NOT NULL ,cognom varchar(20),poblacio varchar(20), dataNaixament DATE, pwd varchar(20) NOT NULL); """)
-#problema al crear dominis
+
 cur.executescript("""
    DROP TABLE IF EXISTS amistats;
 
@@ -270,17 +268,8 @@ while True:
         afegeix_usuari()
 
     elif op==2:
-        print
-        print """
-        1-nomes nom i cognom
-        2-personalitzat
-        """
-        oper=input("que vols mostrar?Nomes nom i cognom o dades personalitzades")
+        mostra_usuaris()
 
-        if oper==1:
-            mostra_usuaris()
-        elif oper==2:
-            pass
     elif op==3:
         mostra_amistats()
 
